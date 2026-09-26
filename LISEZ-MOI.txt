@@ -1,0 +1,130 @@
+===============================================================================
+AKOUSS KALARA — VERSION PHP + MYSQL (pivot d'urgence, délai dimanche)
+===============================================================================
+
+Ce dossier remplace ENTIÈREMENT la version précédente (Django/React/Flutter),
+suite à la nouvelle exigence de l'encadrant : PHP + HTML/CSS/JS vanilla,
+avec paiement MTN/Orange Money réel dès cette itération.
+
+-------------------------------------------------------------------------------
+1. ARBORESCENCE
+-------------------------------------------------------------------------------
+
+akouss-kalara-php/
+├── schema.sql              → Structure des tables MySQL (à importer en premier)
+├── donnees_test.sql        → Catégories + livres de test (à importer ensuite)
+│
+├── api/                     → Backend : endpoints PHP retournant du JSON
+│   ├── config/
+│   │   ├── database.php       (connexion PDO à MySQL)
+│   │   ├── utils.php           (réponses JSON, vérification session)
+│   │   └── paiement_config.php (⚠️ clés MTN/Orange À COMPLÉTER)
+│   ├── auth/                  (inscription, connexion, vérification email)
+│   ├── catalogue/              (livres, catégories — public)
+│   ├── vendeur/                (recherche livre, publier/gérer offres)
+│   ├── panier/                 (ajouter, modifier, supprimer, consulter)
+│   ├── commandes/               (créer commande, historique)
+│   ├── paiement/                (MTN MoMo, Orange Money, callback, statut)
+│   └── admin/                   (gestion vendeurs, modération offres)
+│
+└── web/                     → Frontend : HTML/CSS/JS pur (aucun framework)
+    ├── index.html, catalogue.html, livre.html, inscription.html,
+    │   connexion.html, panier.html, commande.html, mes-commandes.html,
+    │   vendeur-offres.html, vendeur-publier.html, admin.html
+    ├── css/style.css
+    └── js/  (un fichier .js par page, plus api.js commun à toutes)
+
+-------------------------------------------------------------------------------
+2. INSTALLATION — À FAIRE UNE SEULE FOIS
+-------------------------------------------------------------------------------
+
+Étape 1 — Placez tout le dossier dans XAMPP :
+    Copiez ce dossier entier dans C:\xampp\htdocs\akouss-kalara-php\
+
+Étape 2 — Démarrez Apache et MySQL dans le panneau de contrôle XAMPP.
+
+Étape 3 — Créez la base de données :
+    Ouvrez http://localhost/phpmyadmin
+    Onglet "Importer" → sélectionnez schema.sql → Exécuter
+    Onglet "Importer" → sélectionnez donnees_test.sql → Exécuter
+
+Étape 4 — ⚠️ OBLIGATOIRE — Complétez vos clés de paiement :
+    Ouvrez api/config/paiement_config.php
+    Remplacez CHAQUE valeur "VOTRE_..." par vos vraies clés MTN/Orange
+    fournies par ARITED. Sans cela, le paiement ne fonctionnera jamais.
+    Vérifiez aussi les URL exactes des API dans la documentation ARITED —
+    celles du fichier sont les URL sandbox standard, mais peuvent différer
+    légèrement selon votre configuration précise.
+
+-------------------------------------------------------------------------------
+3. CRÉER ET ACTIVER UN COMPTE VENDEUR DE TEST (sans attendre d'email)
+-------------------------------------------------------------------------------
+
+1. Ouvrez http://localhost/akouss-kalara-php/web/inscription.html
+2. Inscrivez-vous normalement, cochez "Je souhaite aussi devenir vendeur"
+3. Sur l'écran de succès, un lien "mode développement" apparaît —
+   cliquez dessus pour activer votre compte immédiatement (pas de vrai
+   email envoyé en local, XAMPP n'a pas de serveur SMTP configuré par défaut)
+4. Pour activer aussi le statut VENDEUR (deuxième jeton généré), ouvrez
+   phpMyAdmin → table jetons_verification → repérez la ligne avec
+   type="activation_vendeur" pour votre compte → copiez sa valeur de
+   "jeton" → ouvrez dans le navigateur :
+   http://localhost/akouss-kalara-php/api/auth/verifier_email.php?jeton=VOTRE_JETON
+
+Alternative plus rapide (directement en base, via phpMyAdmin, onglet SQL) :
+    UPDATE utilisateurs SET est_actif = 1 WHERE email = 'votre_email@test.com';
+    UPDATE profils_vendeur SET statut = 'actif' WHERE utilisateur_id =
+        (SELECT id FROM utilisateurs WHERE email = 'votre_email@test.com');
+
+-------------------------------------------------------------------------------
+4. PUBLIER LES 4 LIVRES DE TEST COMME OFFRES
+-------------------------------------------------------------------------------
+
+Une fois votre compte vendeur actif, connectez-vous puis allez sur
+"Publier une offre" — recherchez chacun des 4 livres déjà présents dans
+donnees_test.sql (Le Petit Prince, L'Alchimiste, Sapiens, Atomic Habits),
+sélectionnez-les (ils apparaîtront dans les résultats de recherche), et
+complétez le formulaire d'offre (prix, stock ou droits d'auteur selon le cas).
+
+Connectez-vous ensuite avec un compte administrateur (mettez est_admin=1
+sur un utilisateur via phpMyAdmin) pour aller sur "Administration" →
+"Offres à modérer" → publier chaque offre, pour qu'elles apparaissent
+enfin dans le catalogue public.
+
+-------------------------------------------------------------------------------
+5. TESTER LE PARCOURS COMPLET
+-------------------------------------------------------------------------------
+
+1. Catalogue (index.html) → cliquer un livre → Ajouter au panier
+2. Panier → Passer la commande
+3. Choisir MTN Mobile Money ou Orange Money, saisir un numéro sandbox
+4. Confirmer sur le "téléphone" (selon le flux de test propre au sandbox
+   utilisé — MTN sandbox simule généralement une confirmation automatique
+   après quelques secondes ; vérifiez la documentation ARITED pour le
+   comportement exact de votre environnement sandbox)
+5. La page doit afficher "Paiement réussi"
+
+-------------------------------------------------------------------------------
+6. POINTS D'ATTENTION HONNÊTES (à connaître avant la présentation)
+-------------------------------------------------------------------------------
+
+- Les URL exactes des API MTN/Orange dans paiement_config.php sont les URL
+  génériques sandbox les plus courantes, mais DOIVENT être vérifiées et
+  ajustées selon la documentation précise fournie par ARITED — les noms de
+  paramètres peuvent varier légèrement selon l'intégrateur.
+
+- Le callback Orange Money (callback_orange.php) doit être accessible
+  publiquement pour fonctionner en conditions réelles (pas "localhost") —
+  pour tester ce flux précis en local, utilisez un outil comme ngrok pour
+  exposer temporairement votre serveur XAMPP à internet.
+
+- L'upload réel de fichiers (justificatif de droits d'auteur, image de
+  couverture) n'est pas encore branché — le champ existe dans le
+  formulaire mais accepte pour l'instant un simple texte à la place d'un
+  vrai fichier, en attendant une itération suivante.
+
+- Les identifiants sont désormais des entiers auto-incrémentés (et non
+  plus des UUID comme dans la version Django) — changement assumé pour
+  la rapidité de développement sous ce délai.
+
+===============================================================================
