@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connexion — Akouss Kalara</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="page-etroite">
+  <div class="carte" style="padding:32px;">
+    <h2 style="margin-bottom:4px;">📚 AKOUSS KALARA</h2>
+    <h1 style="font-size:20px; margin:16px 0 4px;">Se connecter</h1>
+    <p style="color:var(--texte-clair); font-size:13px; margin-bottom:20px;">Bienvenue de retour !</p>
+
+    <div id="zone-message"></div>
+
+    <form id="form-connexion">
+      <div class="champ-groupe">
+        <label class="champ-label">Email</label>
+        <input class="champ" type="email" name="email" required>
+      </div>
+      <div class="champ-groupe">
+        <label class="champ-label">Mot de passe</label>
+        <input class="champ" type="password" name="mot_de_passe" required>
+      </div>
+      <button type="submit" class="btn btn-primaire" style="width:100%;">Se connecter</button>
+    </form>
+
+    <p class="centre espace-haut" style="font-size:13px;">
+      Pas encore de compte ? <a href="inscription.html" style="color:var(--accent); font-weight:600;">S'inscrire</a>
+    </p>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/connexion.js"></script>
+</body>
+</html>

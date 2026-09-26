@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Akouss Kalara — Accueil</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="entete">
+  <div class="conteneur entete-barre">
+    <a href="index.html" class="logo">📚 AKOUSS KALARA</a>
+    <div class="recherche-barre">
+      <input type="text" id="champ-recherche" placeholder="Rechercher un livre, un auteur...">
+    </div>
+    <nav class="entete-actions" id="entete-actions"></nav>
+  </div>
+</header>
+
+<section class="banniere">
+  <div class="conteneur">
+    <h1>Bienvenue sur AKOUSS KALARA</h1>
+    <p>Votre marketplace de livres physiques et numériques</p>
+    <a href="catalogue.html" class="btn btn-primaire" style="background:white;color:var(--marine);">Découvrir le catalogue</a>
+  </div>
+</section>
+
+<main class="conteneur">
+  <h2 style="margin-bottom:16px;">Livres populaires</h2>
+  <div id="grille-livres" class="grille-livres">
+    <p style="color:var(--texte-clair);">Chargement...</p>
+  </div>
+</main>
+
+<div style="height:60px"></div>
+
+<script src="js/api.js"></script>
+<script src="js/accueil.js"></script>
+</body>
+</html>

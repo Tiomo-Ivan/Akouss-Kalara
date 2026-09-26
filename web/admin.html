@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Administration — Akouss Kalara</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="entete">
+  <div class="conteneur entete-barre">
+    <a href="index.html" class="logo">📚 AKOUSS KALARA</a>
+    <div style="flex:1;"></div>
+    <nav class="entete-actions" id="entete-actions"></nav>
+  </div>
+</header>
+<main class="conteneur" style="padding-top:28px;">
+  <h1 style="margin-bottom:20px;">Administration</h1>
+  <div style="display:flex; gap:8px; margin-bottom:20px;">
+    <button class="btn btn-primaire" id="onglet-offres" onclick="afficherOnglet('offres')">Offres à modérer</button>
+    <button class="btn btn-secondaire" id="onglet-vendeurs" onclick="afficherOnglet('vendeurs')">Vendeurs</button>
+  </div>
+  <div id="zone-contenu"><p style="color:var(--texte-clair);">Chargement...</p></div>
+</main>
+<div style="height:60px"></div>
+<script src="js/api.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mes commandes — Akouss Kalara</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="entete">
+  <div class="conteneur entete-barre">
+    <a href="index.html" class="logo">📚 AKOUSS KALARA</a>
+    <div style="flex:1;"></div>
+    <nav class="entete-actions" id="entete-actions"></nav>
+  </div>
+</header>
+<main class="conteneur" style="padding-top:28px;">
+  <h1 style="margin-bottom:20px;">Mes commandes</h1>
+  <div id="zone-commandes"><p style="color:var(--texte-clair);">Chargement...</p></div>
+</main>
+<div style="height:60px"></div>
+<script src="js/api.js"></script>
+<script>
+if (!estConnecte()) window.location.href = "connexion.html";
+
+async function charger() {
+  const zone = document.getElementById("zone-commandes");
+  const commandes = await appelApi("/commandes/mes_commandes.php");
+  if (commandes.length === 0) {
+    zone.innerHTML = `<div class="carte" style="padding:30px; text-align:center; color:var(--texte-clair);">Aucune commande pour le moment.</div>`;
+    return;
+  }
+  zone.innerHTML = `<table class="carte"><thead><tr><th>N°</th><th>Date</th><th>Montant</th><th>Statut commande</th><th>Statut paiement</th></tr></thead><tbody>` +
+    commandes.map(c => `<tr>
+      <td>#${c.id}</td>
+      <td>${new Date(c.date_creation).toLocaleDateString("fr-FR")}</td>
+      <td>${Number(c.montant_total).toLocaleString("fr-FR")} FCFA</td>
+      <td><span class="badge badge-${c.statut === 'payee' ? 'publiee' : 'attente'}">${c.statut}</span></td>
+      <td>${c.statut_paiement || "—"}</td>
+    </tr>`).join("") + `</tbody></table>`;
+}
+charger();
+</script>
+</body>
+</html>

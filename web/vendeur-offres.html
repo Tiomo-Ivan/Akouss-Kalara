@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mes offres — Akouss Kalara</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="entete">
+  <div class="conteneur entete-barre">
+    <a href="index.html" class="logo">📚 AKOUSS KALARA</a>
+    <div style="flex:1;"></div>
+    <nav class="entete-actions" id="entete-actions"></nav>
+  </div>
+</header>
+<main class="conteneur" style="padding-top:28px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <h1>Mes offres</h1>
+    <a href="vendeur-publier.html" class="btn btn-primaire">+ Publier une offre</a>
+  </div>
+  <div id="zone-offres"><p style="color:var(--texte-clair);">Chargement...</p></div>
+</main>
+<div style="height:60px"></div>
+<script src="js/api.js"></script>
+<script>
+if (!estConnecte()) window.location.href = "connexion.html";
+
+async function charger() {
+  const zone = document.getElementById("zone-offres");
+  try {
+    const offres = await appelApi("/vendeur/mes_offres.php");
+    if (offres.length === 0) {
+      zone.innerHTML = `<div class="carte" style="padding:30px; text-align:center; color:var(--texte-clair);">Aucune offre publiée.</div>`;
+      return;
+    }
+    zone.innerHTML = `<table class="carte"><thead><tr><th>Livre</th><th>Type</th><th>Prix</th><th>Statut</th><th></th></tr></thead><tbody>` +
+      offres.map(o => `<tr>
+        <td>${o.livre_titre}</td>
+        <td>${o.type === "physique" ? "Physique" : "Numérique"}</td>
+        <td>${Number(o.prix).toLocaleString("fr-FR")} FCFA</td>
+        <td><span class="badge badge-${o.statut_moderation === 'publiee' ? 'publiee' : o.statut_moderation === 'refusee' ? 'refusee' : 'attente'}">${o.statut_moderation}</span></td>
+        <td>${o.statut_moderation !== 'refusee' ? `<button onclick="retirer(${o.id})" style="color:var(--danger); background:none; border:none; cursor:pointer; font-size:12px;">Retirer</button>` : ""}</td>
+      </tr>`).join("") + `</tbody></table>`;
+  } catch (err) {
+    zone.innerHTML = `<p class="message-erreur">Vous devez être un vendeur actif pour accéder à cette page.</p>`;
+  }
+}
+
+async function retirer(id) {
+  if (!confirm("Retirer cette offre de la vente ?")) return;
+  await appelApi(`/vendeur/retirer_offre.php?id=${id}`, { methode: "POST" });
+  charger();
+}
+charger();
+</script>
+</body>
+</html>

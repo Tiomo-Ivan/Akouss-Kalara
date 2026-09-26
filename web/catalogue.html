@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catalogue — Akouss Kalara</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="entete">
+  <div class="conteneur entete-barre">
+    <a href="index.html" class="logo">📚 AKOUSS KALARA</a>
+    <div class="recherche-barre"><input type="text" id="champ-recherche" placeholder="Rechercher..."></div>
+    <nav class="entete-actions" id="entete-actions"></nav>
+  </div>
+</header>
+
+<main class="conteneur" style="padding-top:24px;">
+  <h1 style="margin-bottom:20px;">Catalogue</h1>
+  <div style="display:flex; gap:30px; align-items:flex-start;">
+    <aside class="carte" style="width:200px; padding:16px; flex-shrink:0;">
+      <h3 style="font-size:13px; margin-bottom:10px;">Catégories</h3>
+      <div id="liste-categories" style="display:flex; flex-direction:column; gap:6px;"></div>
+    </aside>
+    <div id="grille-livres" class="grille-livres" style="flex:1;">
+      <p style="color:var(--texte-clair);">Chargement...</p>
+    </div>
+  </div>
+</main>
+
+<div style="height:60px"></div>
+
+<script src="js/api.js"></script>
+<script src="js/catalogue.js"></script>
+</body>
+</html>
