@@ -10,7 +10,7 @@
 
 # Flutter build directories
 /build/
-/web/
+# /web/
 
 # Android/IOS files that you do not want to git keep
 **/ios/**/*.mode1v3
@@ -109,3 +109,6 @@ Thumbs.db
 # Firebase
 firebase.json
 .release/
+
+# Fichiers de sauvegarde temporaires
+*.bak

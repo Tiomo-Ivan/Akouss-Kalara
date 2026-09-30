@@ -3,7 +3,7 @@
 -- Toute l'équipe (Risnel, Ivan) doit importer ce fichier pour avoir
 -- exactement les mêmes catégories et livres de démonstration.
 --
--- ⚠️ Le compte "vendeur de démo" n'est PAS créé ici directement (un mot de
+-- Le compte "vendeur de démo" n'est PAS créé ici directement (un mot de
 -- passe haché correctement ne peut être généré que par PHP via
 -- password_hash(), pas écrit à la main dans du SQL). Suivez plutôt les
 -- étapes du LISEZ-MOI.txt : inscrivez-vous normalement via le site, puis
