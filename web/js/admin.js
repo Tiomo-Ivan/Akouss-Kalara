@@ -24,7 +24,7 @@ async function chargerOffresAModerer() {
       <div>
         <strong>${o.livre_titre}</strong><br>
         <span style="font-size:12px; color:var(--texte-clair);">Par ${o.vendeur_nom} · ${o.type} · ${Number(o.prix).toLocaleString("fr-FR")} FCFA</span>
-        ${o.type === 'numerique' && o.statut_droits === 'droits_detenus' ? `<br><span style="font-size:11px; color:${o.justificatif_droits ? 'var(--succes)' : 'var(--danger)'};">${o.justificatif_droits ? '✓ Justificatif fourni' : '⚠ Justificatif manquant'}</span>` : ""}
+        ${o.type === 'numerique' && o.statut_droits === 'droits_detenus' ? `<br><span style="font-size:11px; color:${o.justificatif_droits ? 'var(--succes)' : 'var(--danger)'};">${o.justificatif_droits ? 'Justificatif fourni' : 'Justificatif manquant'}</span>` : ""}
       </div>
       <div style="display:flex; gap:8px;">
         <button class="btn btn-danger" onclick="moderer(${o.id}, 'refusee')">Refuser</button>

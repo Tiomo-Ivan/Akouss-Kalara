@@ -94,3 +94,23 @@ tr { border-top: 1px solid var(--bordure); }
 .centre { text-align: center; }
 .espace-haut { margin-top: 20px; }
 .espace-bas { margin-bottom: 20px; }
+
+.couverture-vide {
+  color: var(--texte-clair);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+.message-icone {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.message-icone.succes {
+  color: var(--succes);
+}
+
+.message-icone.erreur {
+  color: var(--danger);
+}

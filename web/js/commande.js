@@ -98,14 +98,14 @@ async function verifierStatutPaiement() {
 function afficherResultat(succes) {
   document.getElementById("zone-commande").innerHTML = succes ? `
     <div class="carte centre" style="padding:32px;">
-      <div style="font-size:40px;">✅</div>
+      <div class="message-icone succes">Succès</div>
       <h2 style="margin:12px 0 8px;">Paiement réussi !</h2>
       <p style="color:var(--texte-clair); font-size:13.5px;">Votre commande #${commandeId} a été confirmée.</p>
       <a href="mes-commandes.html" class="btn btn-primaire espace-haut" style="display:inline-flex;">Voir mes commandes</a>
     </div>
   ` : `
     <div class="carte centre" style="padding:32px;">
-      <div style="font-size:40px;">❌</div>
+      <div class="message-icone erreur">Échec</div>
       <h2 style="margin:12px 0 8px;">Paiement échoué</h2>
       <p style="color:var(--texte-clair); font-size:13.5px;">Le paiement n'a pas abouti.</p>
       <button class="btn btn-primaire espace-haut" onclick="afficherFormulairePaiement()">Réessayer</button>

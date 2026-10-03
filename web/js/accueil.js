@@ -22,7 +22,7 @@ function construireCarteLivreHtml(livre) {
   const prix = livre.prix_min ? `${Number(livre.prix_min).toLocaleString("fr-FR")} FCFA` : "Indisponible";
   const image = livre.image_couverture
     ? `<img src="${livre.image_couverture}" alt="${livre.titre}">`
-    : `<span style="font-size:32px;">📖</span>`;
+    : `<span class="couverture-vide">Aucune couverture</span>`;
 
   return `
     <a href="livre.html?id=${livre.id}" class="carte carte-livre">

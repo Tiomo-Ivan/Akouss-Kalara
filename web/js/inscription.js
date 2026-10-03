@@ -22,7 +22,7 @@ document.getElementById("form-inscription").addEventListener("submit", async (e)
 
     document.getElementById("carte-inscription").innerHTML = `
       <div class="centre">
-        <div style="font-size:40px;">✅</div>
+        <div class="message-icone succes">Inscription réussie</div>
         <h2 style="margin:12px 0 8px;">Vérifiez votre boîte mail</h2>
         <p style="color:var(--texte-clair); font-size:13.5px;">Un lien de confirmation a été envoyé à ${donnees.email}.</p>
         ${resultat.lien_activation_dev ? `<p style="font-size:11px; margin-top:10px;">Mode développement — <a href="${resultat.lien_activation_dev}" style="color:var(--accent);">cliquer ici pour activer directement</a></p>` : ""}
