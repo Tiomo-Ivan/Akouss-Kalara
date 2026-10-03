@@ -70,7 +70,6 @@ async function lancerPaiement() {
 function afficherAttenteConfirmation() {
   document.getElementById("zone-commande").innerHTML = `
     <div class="carte centre" style="padding:32px;">
-      <div style="font-size:40px;">⏳</div>
       <h2 style="margin:12px 0 8px;">Confirmez sur votre téléphone</h2>
       <p style="color:var(--texte-clair); font-size:13.5px;">
         Une notification de paiement a été envoyée à votre téléphone. Confirmez-la pour finaliser votre commande.
