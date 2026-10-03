@@ -8,6 +8,24 @@ let rechercheActive = parametresUrl.get("q") || "";
 
 document.getElementById("champ-recherche").value = rechercheActive;
 
+function mettreAJourUrl() {
+  const params = new URLSearchParams();
+
+  if (rechercheActive) {
+    params.set("q", rechercheActive);
+  }
+
+  if (categorieActive) {
+    params.set("categorie", categorieActive);
+  }
+
+  const nouvelleUrl = params.toString()
+    ? `${window.location.pathname}?${params.toString()}`
+    : window.location.pathname;
+
+  window.history.replaceState({}, "", nouvelleUrl);
+}
+
 async function chargerCategories() {
   const categories = await appelApi("/catalogue/categories.php");
   const zone = document.getElementById("liste-categories");
@@ -18,6 +36,7 @@ async function chargerCategories() {
     lien.addEventListener("click", (e) => {
       e.preventDefault();
       categorieActive = lien.dataset.slug;
+      mettreAJourUrl();
       chargerLivres();
       chargerCategories();
     });
@@ -56,7 +75,8 @@ function construireCarteLivreHtml(livre) {
 
 document.getElementById("champ-recherche").addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
-    rechercheActive = e.target.value;
+    rechercheActive = e.target.value.trim();
+    mettreAJourUrl();
     chargerLivres();
   }
 });
