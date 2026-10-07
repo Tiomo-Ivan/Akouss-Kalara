@@ -14,31 +14,181 @@
     <nav class="entete-actions" id="entete-actions"></nav>
   </div>
 </header>
+
 <main class="conteneur" style="padding-top:28px;">
   <h1 style="margin-bottom:20px;">Mes commandes</h1>
-  <div id="zone-commandes"><p style="color:var(--texte-clair);">Chargement...</p></div>
+  <div id="zone-commandes">
+    <p style="color:var(--texte-clair);">Chargement...</p>
+  </div>
 </main>
+
 <div style="height:60px"></div>
+
 <script src="js/api.js"></script>
+
 <script>
-if (!estConnecte()) window.location.href = "connexion.html";
+if (!estConnecte()) {
+  window.location.href = "connexion.html";
+}
+
+function afficherLignes(lignes, commande) {
+  if (!lignes || lignes.length === 0) {
+    return `<span style="color:var(--texte-clair);">Aucun article</span>`;
+  }
+
+  return lignes.map(ligne => {
+    const estNumerique = ligne.type === "numerique";
+    const paiementReussi = commande.statut === "payee";
+    const peutTelecharger = estNumerique && paiementReussi;
+
+    return `
+      <div style="margin-bottom:10px;">
+        <div>
+          <strong>${ligne.titre}</strong>
+          ${estNumerique ? `
+            <span class="badge badge-publiee" style="margin-left:6px;">
+              Numérique
+            </span>
+          ` : ""}
+        </div>
+
+        ${estNumerique ? (
+          peutTelecharger
+            ? `
+              <button
+                class="btn btn-primaire"
+                style="margin-top:7px;"
+                onclick="telechargerLivre(${commande.id}, ${ligne.offre_id}, this)"
+              >
+                Télécharger
+              </button>
+            `
+            : `
+              <span style="display:inline-block; margin-top:7px; color:var(--texte-clair); font-size:13px;">
+                Disponible après paiement
+              </span>
+            `
+        ) : ""}
+      </div>
+    `;
+  }).join("");
+}
+
+async function telechargerLivre(commandeId, offreId, bouton) {
+  const texteInitial = bouton.textContent;
+  bouton.disabled = true;
+  bouton.textContent = "Téléchargement...";
+
+  try {
+    const jeton = obtenirJeton();
+
+    const reponse = await fetch(
+      `${URL_BASE_API}/commandes/telecharger_livre.php?commande_id=${commandeId}&offre_id=${offreId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${jeton}`
+        }
+      }
+    );
+
+    if (!reponse.ok) {
+      let message = "Impossible de télécharger le livre.";
+
+      try {
+        message = await reponse.text();
+      } catch (_) {}
+
+      throw new Error(message);
+    }
+
+    const blob = await reponse.blob();
+
+    const disposition = reponse.headers.get("content-disposition") || "";
+    const correspondance = disposition.match(/filename="([^"]+)"/i);
+    const nomFichier = correspondance
+      ? correspondance[1]
+      : "livre-numerique.pdf";
+
+    const url = URL.createObjectURL(blob);
+    const lien = document.createElement("a");
+
+    lien.href = url;
+    lien.download = nomFichier;
+    document.body.appendChild(lien);
+    lien.click();
+    lien.remove();
+
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    alert(err.message || "Impossible de télécharger le livre.");
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = texteInitial;
+  }
+}
 
 async function charger() {
   const zone = document.getElementById("zone-commandes");
-  const commandes = await appelApi("/commandes/mes_commandes.php");
-  if (commandes.length === 0) {
-    zone.innerHTML = `<div class="carte" style="padding:30px; text-align:center; color:var(--texte-clair);">Aucune commande pour le moment.</div>`;
-    return;
+
+  try {
+    const commandes = await appelApi("/commandes/mes_commandes.php");
+
+    if (commandes.length === 0) {
+      zone.innerHTML = `
+        <div class="carte" style="padding:30px; text-align:center; color:var(--texte-clair);">
+          Aucune commande pour le moment.
+        </div>
+      `;
+      return;
+    }
+
+    zone.innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        ${commandes.map(c => `
+          <div class="carte" style="padding:20px;">
+            <div style="display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; align-items:flex-start;">
+              <div>
+                <strong>Commande #${c.id}</strong>
+                <div style="margin-top:5px; color:var(--texte-clair); font-size:13px;">
+                  ${new Date(c.date_creation).toLocaleDateString("fr-FR")}
+                </div>
+              </div>
+
+              <div style="text-align:right;">
+                <strong>${Number(c.montant_total).toLocaleString("fr-FR")} FCFA</strong>
+                <div style="margin-top:6px;">
+                  <span class="badge badge-${c.statut === "payee" ? "publiee" : "attente"}">
+                    ${c.statut}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:16px;">
+              <div style="font-size:13px; font-weight:700; margin-bottom:10px;">
+                Articles
+              </div>
+
+              ${afficherLignes(c.lignes, c)}
+            </div>
+
+            <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--bordure); color:var(--texte-clair); font-size:13px;">
+              Paiement : ${c.statut_paiement || "—"}
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  } catch (err) {
+    zone.innerHTML = `
+      <div class="message-erreur">
+        ${err.message || "Impossible de charger les commandes."}
+      </div>
+    `;
   }
-  zone.innerHTML = `<table class="carte"><thead><tr><th>N°</th><th>Date</th><th>Montant</th><th>Statut commande</th><th>Statut paiement</th></tr></thead><tbody>` +
-    commandes.map(c => `<tr>
-      <td>#${c.id}</td>
-      <td>${new Date(c.date_creation).toLocaleDateString("fr-FR")}</td>
-      <td>${Number(c.montant_total).toLocaleString("fr-FR")} FCFA</td>
-      <td><span class="badge badge-${c.statut === 'payee' ? 'publiee' : 'attente'}">${c.statut}</span></td>
-      <td>${c.statut_paiement || "—"}</td>
-    </tr>`).join("") + `</tbody></table>`;
 }
+
 charger();
 </script>
 </body>
