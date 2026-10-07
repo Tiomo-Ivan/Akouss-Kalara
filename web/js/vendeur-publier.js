@@ -125,8 +125,16 @@ function afficherEtapeOffre() {
             <option value="droits_detenus">Je détiens les droits</option>
           </select>
         </div>
+        <div class="champ-groupe">
+          <label class="champ-label">Fichier du livre numérique (PDF)</label>
+          <input class="champ" type="file" id="offre-fichier-numerique" accept=".pdf,application/pdf">
+          <div style="font-size:12px; color:var(--texte-clair); margin-top:6px;">
+            Format PDF uniquement, taille maximale : 20 Mo.
+          </div>
+        </div>
+
         <div class="champ-groupe" id="zone-justificatif" style="display:none;">
-          <label class="champ-label">Justificatif de droits (upload à finaliser — indiquez "fourni" pour tester)</label>
+          <label class="champ-label">Justificatif de droits</label>
           <input class="champ" id="offre-justificatif" placeholder="ex: licence.pdf">
         </div>
       </div>
@@ -150,31 +158,93 @@ async function soumettreOffre() {
   const zoneMessage = document.getElementById("zone-message-offre");
   const prix = document.getElementById("offre-prix").value;
 
-  const payload = { type: typeSelectionne, prix };
-  if (livreChoisi.nouveau) {
-    payload.livre_nouveau = { titre: livreChoisi.titre, auteur: livreChoisi.auteur, categorie_id: livreChoisi.categorie_id, description: livreChoisi.description };
-  } else {
-    payload.livre_id = livreChoisi.id;
-  }
-
-  if (typeSelectionne === 'physique') {
-    payload.quantite_stock = document.getElementById("offre-stock").value;
-    payload.etat_article = document.getElementById("offre-etat").value;
-  } else {
-    payload.statut_droits = document.getElementById("offre-droits").value;
-    payload.justificatif_droits = document.getElementById("offre-justificatif")?.value || null;
-  }
-
   try {
-    await appelApi("/vendeur/mes_offres.php", { methode: "POST", corps: payload });
+    if (!prix || Number(prix) <= 0) {
+      throw new Error("Veuillez saisir un prix valide.");
+    }
+
+    // -------------------------------------------------------------------------
+    // OFFRE NUMÉRIQUE : envoi multipart/form-data avec le fichier PDF
+    // -------------------------------------------------------------------------
+    if (typeSelectionne === "numerique") {
+      const fichier = document.getElementById("offre-fichier-numerique").files[0];
+      const statutDroits = document.getElementById("offre-droits").value;
+      const justificatifDroits =
+        document.getElementById("offre-justificatif")?.value.trim() || "";
+
+      if (!fichier) {
+        throw new Error("Veuillez sélectionner le fichier PDF du livre.");
+      }
+
+      if (!statutDroits) {
+        throw new Error("Veuillez indiquer le statut des droits d'auteur.");
+      }
+
+      if (statutDroits === "droits_detenus" && !justificatifDroits) {
+        throw new Error("Veuillez fournir le justificatif de droits.");
+      }
+
+      if (livreChoisi.nouveau) {
+        throw new Error("La publication numérique d'un nouveau livre sera ajoutée dans une prochaine étape. Sélectionnez un livre existant.");
+      }
+
+      const formulaire = new FormData();
+      formulaire.append("livre_id", livreChoisi.id);
+      formulaire.append("prix", prix);
+      formulaire.append("statut_droits", statutDroits);
+      formulaire.append("justificatif_droits", justificatifDroits);
+      formulaire.append("fichier_numerique", fichier);
+
+      await appelApi("/vendeur/publier_offre_numerique.php", {
+        methode: "POST",
+        corps: formulaire
+      });
+
+    // -------------------------------------------------------------------------
+    // OFFRE PHYSIQUE : fonctionnement existant conservé
+    // -------------------------------------------------------------------------
+    } else {
+      const payload = {
+        type: "physique",
+        prix
+      };
+
+      if (livreChoisi.nouveau) {
+        payload.livre_nouveau = {
+          titre: livreChoisi.titre,
+          auteur: livreChoisi.auteur,
+          categorie_id: livreChoisi.categorie_id,
+          description: livreChoisi.description
+        };
+      } else {
+        payload.livre_id = livreChoisi.id;
+      }
+
+      payload.quantite_stock = document.getElementById("offre-stock").value;
+      payload.etat_article = document.getElementById("offre-etat").value;
+
+      await appelApi("/vendeur/mes_offres.php", {
+        methode: "POST",
+        corps: payload
+      });
+    }
+
     document.getElementById("zone-etape").innerHTML = `
       <div class="carte centre" style="padding:32px;">
         <h2>Offre soumise !</h2>
-        <p style="color:var(--texte-clair); font-size:13.5px;">En attente de modération par un administrateur.</p>
-        <a href="vendeur-offres.html" class="btn btn-primaire espace-haut" style="display:inline-flex;">Voir mes offres</a>
+        <p style="color:var(--texte-clair); font-size:13.5px;">
+          En attente de modération par un administrateur.
+        </p>
+        <a href="vendeur-offres.html" class="btn btn-primaire espace-haut" style="display:inline-flex;">
+          Voir mes offres
+        </a>
       </div>`;
+
   } catch (err) {
-    const messages = err.donnees?.erreurs ? Object.values(err.donnees.erreurs).join(" | ") : err.message;
+    const messages = err.donnees?.erreurs
+      ? Object.values(err.donnees.erreurs).join(" | ")
+      : err.message;
+
     zoneMessage.innerHTML = `<div class="message-erreur">${messages}</div>`;
   }
 }

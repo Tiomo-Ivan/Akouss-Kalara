@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ma boutique — Akouss Kalara</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="entete">
+  <div class="conteneur entete-barre">
+    <a href="index.html" class="logo">AKOUSS KALARA</a>
+    <div style="flex:1;"></div>
+    <nav class="entete-actions" id="entete-actions"></nav>
+  </div>
+</header>
+
+<main class="conteneur" style="padding-top:28px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:15px; flex-wrap:wrap;">
+    <div>
+      <h1>Ma boutique</h1>
+      <p style="color:var(--texte-clair); margin-top:6px;">
+        Gérez les informations de votre boutique vendeur.
+      </p>
+    </div>
+    <a href="vendeur-offres.html" class="btn btn-secondaire">Mes offres</a>
+  </div>
+
+  <div id="zone-message"></div>
+
+  <div class="carte" style="padding:24px; max-width:700px;">
+    <div class="champ-groupe">
+      <label class="champ-label" for="nom-boutique">Nom de la boutique</label>
+      <input class="champ" id="nom-boutique" maxlength="255" required>
+    </div>
+
+    <div class="champ-groupe">
+      <label class="champ-label" for="description-boutique">Description de la boutique</label>
+      <textarea
+        class="champ"
+        id="description-boutique"
+        rows="5"
+        maxlength="5000"
+        placeholder="Présentez brièvement votre boutique..."
+      ></textarea>
+    </div>
+
+    <div class="champ-groupe">
+      <label class="champ-label" for="numero-mobile-money">Numéro Mobile Money</label>
+      <input
+        class="champ"
+        id="numero-mobile-money"
+        type="tel"
+        inputmode="numeric"
+        maxlength="20"
+        placeholder="Ex. 690000000"
+      >
+    </div>
+
+    <div class="champ-groupe">
+      <label class="champ-label" for="operateur-mobile-money">Opérateur Mobile Money</label>
+      <select class="champ" id="operateur-mobile-money">
+        <option value="">Choisir...</option>
+        <option value="mtn_momo">MTN MoMo</option>
+        <option value="orange_money">Orange Money</option>
+      </select>
+    </div>
+
+    <button class="btn btn-primaire" id="bouton-enregistrer" type="button">
+      Enregistrer les modifications
+    </button>
+  </div>
+</main>
+
+<div style="height:60px"></div>
+
+<script src="js/api.js"></script>
+<script src="js/vendeur-boutique.js"></script>
+</body>
+</html>

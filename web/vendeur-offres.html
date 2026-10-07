@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+
 <header class="entete">
   <div class="conteneur entete-barre">
     <a href="index.html" class="logo">AKOUSS KALARA</a>
@@ -14,45 +15,233 @@
     <nav class="entete-actions" id="entete-actions"></nav>
   </div>
 </header>
+
 <main class="conteneur" style="padding-top:28px;">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-    <h1>Mes offres</h1>
-    <a href="vendeur-publier.html" class="btn btn-primaire">+ Publier une offre</a>
+
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:12px; flex-wrap:wrap;">
+    <div>
+      <h1>Mes offres</h1>
+      <p style="color:var(--texte-clair); margin-top:6px;">
+        Consultez et gérez vos offres publiées.
+      </p>
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <a href="vendeur-boutique.html" class="btn btn-secondaire">Ma boutique</a>
+      <a href="vendeur-publier.html" class="btn btn-primaire">+ Publier une offre</a>
+    </div>
   </div>
-  <div id="zone-offres"><p style="color:var(--texte-clair);">Chargement...</p></div>
+
+  <div id="zone-message"></div>
+
+  <div id="zone-offres">
+    <p style="color:var(--texte-clair);">Chargement...</p>
+  </div>
+
 </main>
+
 <div style="height:60px"></div>
+
 <script src="js/api.js"></script>
+
 <script>
-if (!estConnecte()) window.location.href = "connexion.html";
+if (!estConnecte()) {
+  window.location.href = "connexion.html";
+}
+
+function afficherMessage(type, message) {
+  const zone = document.getElementById("zone-message");
+
+  if (type === "succes") {
+    zone.innerHTML = `<div class="message-succes">${message}</div>`;
+  } else {
+    zone.innerHTML = `<div class="message-erreur">${message}</div>`;
+  }
+}
+
+function afficherFormulaireStock(id, stock) {
+  const zone = document.getElementById(`zone-stock-${id}`);
+
+  zone.innerHTML = `
+    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+      <input
+        class="champ"
+        type="number"
+        min="0"
+        step="1"
+        value="${stock}"
+        id="stock-${id}"
+        style="width:90px; padding:7px 9px;"
+      >
+      <button
+        class="btn btn-primaire"
+        type="button"
+        onclick="enregistrerStock(${id})"
+        style="padding:7px 10px; font-size:12px;"
+      >
+        Enregistrer
+      </button>
+      <button
+        type="button"
+        onclick="charger()"
+        style="color:var(--texte-clair); background:none; border:none; cursor:pointer; font-size:12px;"
+      >
+        Annuler
+      </button>
+    </div>
+  `;
+}
+
+async function enregistrerStock(id) {
+  const champ = document.getElementById(`stock-${id}`);
+  const quantite = champ ? champ.value : null;
+
+  if (quantite === null || quantite === "" || Number(quantite) < 0 || !Number.isInteger(Number(quantite))) {
+    afficherMessage("erreur", "La quantité doit être un nombre entier supérieur ou égal à 0.");
+    return;
+  }
+
+  try {
+    const resultat = await appelApi("/vendeur/modifier_stock.php", {
+      methode: "POST",
+      corps: {
+        offre_id: id,
+        quantite_stock: Number(quantite)
+      }
+    });
+
+    afficherMessage("succes", resultat.message || "Stock mis à jour.");
+    await charger();
+  } catch (err) {
+    const messages = err.donnees?.erreurs
+      ? Object.values(err.donnees.erreurs).join(" | ")
+      : err.message;
+
+    afficherMessage("erreur", messages);
+  }
+}
 
 async function charger() {
   const zone = document.getElementById("zone-offres");
+
   try {
     const offres = await appelApi("/vendeur/mes_offres.php");
+
     if (offres.length === 0) {
-      zone.innerHTML = `<div class="carte" style="padding:30px; text-align:center; color:var(--texte-clair);">Aucune offre publiée.</div>`;
+      zone.innerHTML = `
+        <div class="carte" style="padding:30px; text-align:center; color:var(--texte-clair);">
+          Aucune offre publiée.
+        </div>
+      `;
       return;
     }
-    zone.innerHTML = `<table class="carte"><thead><tr><th>Livre</th><th>Type</th><th>Prix</th><th>Statut</th><th></th></tr></thead><tbody>` +
-      offres.map(o => `<tr>
-        <td>${o.livre_titre}</td>
-        <td>${o.type === "physique" ? "Physique" : "Numérique"}</td>
-        <td>${Number(o.prix).toLocaleString("fr-FR")} FCFA</td>
-        <td><span class="badge badge-${o.statut_moderation === 'publiee' ? 'publiee' : o.statut_moderation === 'refusee' ? 'refusee' : 'attente'}">${o.statut_moderation}</span></td>
-        <td>${o.statut_moderation !== 'refusee' ? `<button onclick="retirer(${o.id})" style="color:var(--danger); background:none; border:none; cursor:pointer; font-size:12px;">Retirer</button>` : ""}</td>
-      </tr>`).join("") + `</tbody></table>`;
+
+    zone.innerHTML = `
+      <div style="overflow-x:auto;">
+        <table class="carte">
+          <thead>
+            <tr>
+              <th>Livre</th>
+              <th>Type</th>
+              <th>Prix</th>
+              <th>Stock</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${offres.map(o => `
+              <tr>
+                <td>${o.livre_titre}</td>
+
+                <td>
+                  ${o.type === "physique" ? "Physique" : "Numérique"}
+                </td>
+
+                <td>
+                  ${Number(o.prix).toLocaleString("fr-FR")} FCFA
+                </td>
+
+                <td>
+                  ${
+                    o.type === "physique"
+                      ? `
+                        <div id="zone-stock-${o.id}">
+                          <strong>${o.quantite_stock ?? 0}</strong>
+                          <button
+                            type="button"
+                            onclick="afficherFormulaireStock(${o.id}, ${Number(o.quantite_stock ?? 0)})"
+                            style="margin-left:8px; color:var(--accent); background:none; border:none; cursor:pointer; font-size:12px;"
+                          >
+                            Modifier
+                          </button>
+                        </div>
+                      `
+                      : "—"
+                  }
+                </td>
+
+                <td>
+                  <span class="badge badge-${
+                    o.statut_moderation === "publiee"
+                      ? "publiee"
+                      : o.statut_moderation === "refusee"
+                        ? "refusee"
+                        : "attente"
+                  }">
+                    ${o.statut_moderation}
+                  </span>
+                </td>
+
+                <td>
+                  ${
+                    o.statut_moderation !== "refusee"
+                      ? `
+                        <button
+                          onclick="retirer(${o.id})"
+                          style="color:var(--danger); background:none; border:none; cursor:pointer; font-size:12px;"
+                        >
+                          Retirer
+                        </button>
+                      `
+                      : ""
+                  }
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+
   } catch (err) {
-    zone.innerHTML = `<p class="message-erreur">Vous devez être un vendeur actif pour accéder à cette page.</p>`;
+    zone.innerHTML = `
+      <p class="message-erreur">
+        Vous devez être un vendeur actif pour accéder à cette page.
+      </p>
+    `;
   }
 }
 
 async function retirer(id) {
-  if (!confirm("Retirer cette offre de la vente ?")) return;
-  await appelApi(`/vendeur/retirer_offre.php?id=${id}`, { methode: "POST" });
-  charger();
+  if (!confirm("Retirer cette offre de la vente ?")) {
+    return;
+  }
+
+  try {
+    await appelApi(`/vendeur/retirer_offre.php?id=${id}`, {
+      methode: "POST"
+    });
+
+    afficherMessage("succes", "Offre retirée de la vente.");
+    await charger();
+  } catch (err) {
+    afficherMessage("erreur", err.message);
+  }
 }
+
 charger();
 </script>
+
 </body>
 </html>

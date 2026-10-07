@@ -112,3 +112,7 @@ firebase.json
 
 # Fichiers de sauvegarde temporaires
 *.bak
+
+# Fichiers numériques déposés par les vendeurs
+/stockage/livres_numeriques/*
+!/stockage/livres_numeriques/.gitkeep

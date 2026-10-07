@@ -31,19 +31,30 @@ function deconnecterLocalement() {
 }
 
 /**
- * Fonction générique d'appel API. Ajoute automatiquement le jeton
- * d'authentification s'il existe, et lève une erreur exploitable en cas
- * d'échec (avec le message renvoyé par le serveur PHP).
+ * Fonction générique d'appel API.
+ *
+ * Par défaut, les données sont envoyées en JSON.
+ * Si le corps est un FormData, il est envoyé directement afin de permettre
+ * les uploads de fichiers. Dans ce cas, on ne définit surtout pas
+ * manuellement Content-Type : le navigateur ajoute automatiquement la
+ * boundary multipart/form-data.
  */
 async function appelApi(chemin, options = {}) {
-  const entetes = { "Content-Type": "application/json", ...(options.entetes || {}) };
+  const corpsEstFormData = options.corps instanceof FormData;
+
+  const entetes = corpsEstFormData
+    ? { ...(options.entetes || {}) }
+    : { "Content-Type": "application/json", ...(options.entetes || {}) };
+
   const jeton = obtenirJeton();
   if (jeton) entetes["Authorization"] = `Bearer ${jeton}`;
 
   const reponse = await fetch(`${URL_BASE_API}${chemin}`, {
     method: options.methode || "GET",
     headers: entetes,
-    body: options.corps ? JSON.stringify(options.corps) : undefined,
+    body: options.corps
+      ? (corpsEstFormData ? options.corps : JSON.stringify(options.corps))
+      : undefined,
   });
 
   const donnees = await reponse.json().catch(() => ({}));
@@ -54,6 +65,7 @@ async function appelApi(chemin, options = {}) {
     erreur.status = reponse.status;
     throw erreur;
   }
+
   return donnees;
 }
 
@@ -73,14 +85,18 @@ function initialiserEntete() {
   }
 
   let liens = `<a href="panier.html">Panier</a><a href="mes-commandes.html">Mes commandes</a>`;
+
   if (utilisateur.est_vendeur_actif) {
     liens += `<a href="vendeur-offres.html">Mes offres</a>`;
   }
+
   if (utilisateur.est_admin) {
     liens += `<a href="admin.html">Administration</a>`;
   }
+
   liens += `<span>${utilisateur.nom_complet.split(" ")[0]}</span>`;
   liens += `<button onclick="deconnecterLocalement()">Déconnexion</button>`;
+
   zoneActions.innerHTML = liens;
 }
 
