@@ -298,33 +298,6 @@ class ApiService {
     );
   }
 
-    static Future<Map<String, dynamic>> simulerPaiement({
-    required String token,
-    required int orderId,
-    required String provider,
-    required String phone,
-    required String status,
-  }) async {
-    final data = await post(
-      'paiement/simuler.php',
-      token: token,
-      body: {
-        'commande_id': orderId,
-        'fournisseur': provider,
-        'telephone': phone,
-        'statut': status,
-      },
-    );
-
-    if (data is Map<String, dynamic>) {
-      return data;
-    }
-
-    throw Exception(
-      'Format inattendu lors de la simulation du paiement.',
-    );
-  }
-
   static Future<Map<String, dynamic>> getPaymentStatus({
     required String token,
     required int orderId,

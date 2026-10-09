@@ -19,7 +19,6 @@ class _CartScreenState extends State<CartScreen> {
   String? _errorMessage;
   int? _updatingLineId;
   bool _isCreatingOrder = false;
-  bool _isInitiatingPayment = false;
 
   @override
   void initState() {
@@ -256,429 +255,40 @@ class _CartScreenState extends State<CartScreen> {
     required int commandeId,
     required dynamic montantTotal,
   }) async {
-    String fournisseur = 'mtn_momo';
-    final telephoneController = TextEditingController();
-
     await showDialog<void>(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true,
       builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text('Choisir le mode de paiement'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Commande #$commandeId',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 6),
-                    Text('Montant : ${_formatPrice(montantTotal)}'),
-                    const SizedBox(height: 20),
-
-                    const Text(
-                      'Mode de paiement',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 8),
-
-                    RadioGroup<String>(
-                      groupValue: fournisseur,
-                      onChanged: (value) {
-                        if (_isInitiatingPayment || value == null) {
-                          return;
-                        }
-
-                        setDialogState(() {
-                          fournisseur = value;
-                        });
-                      },
-                      child: Column(
-                        children: [
-                          RadioListTile<String>(
-                            value: 'mtn_momo',
-                            contentPadding: EdgeInsets.zero,
-                            title: const Text('MTN Mobile Money'),
-                            subtitle: const Text('Paiement par MTN MoMo'),
-                          ),
-                          RadioListTile<String>(
-                            value: 'orange_money',
-                            contentPadding: EdgeInsets.zero,
-                            title: const Text('Orange Money'),
-                            subtitle: const Text('Paiement par Orange Money'),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    TextField(
-                      controller: telephoneController,
-                      enabled: !_isInitiatingPayment,
-                      keyboardType: TextInputType.phone,
-                      textInputAction: TextInputAction.done,
-                      decoration: const InputDecoration(
-                        labelText: 'Numéro de téléphone',
-                        hintText: '6XXXXXXXX',
-                        prefixIcon: Icon(Icons.phone_android),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.orange.shade300),
-                        color: Colors.orange.shade50,
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.science_outlined,
-                            color: Colors.orange.shade800,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'MODE SIMULATION — DÉVELOPPEMENT\\n'
-                              'Aucun paiement réel ne sera effectué. '
-                              'Cette simulation permet de tester le '
-                              'parcours de paiement avant l’intégration '
-                              'ARITED.',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.orange.shade900,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: _isInitiatingPayment
-                      ? null
-                      : () {
-                          Navigator.pop(dialogContext);
-                        },
-                  child: const Text('Plus tard'),
-                ),
-                OutlinedButton.icon(
-                  onPressed: _isInitiatingPayment
-                      ? null
-                      : () async {
-                          await _handlePaymentSimulation(
-                            dialogContext: dialogContext,
-                            commandeId: commandeId,
-                            fournisseur: fournisseur,
-                            telephone: telephoneController.text.trim(),
-                            statut: 'echec',
-                            setDialogState: setDialogState,
-                          );
-                        },
-                  icon: const Icon(Icons.cancel_outlined),
-                  label: const Text('Simuler échec'),
-                ),
-                ElevatedButton.icon(
-                  onPressed: _isInitiatingPayment
-                      ? null
-                      : () async {
-                          await _handlePaymentSimulation(
-                            dialogContext: dialogContext,
-                            commandeId: commandeId,
-                            fournisseur: fournisseur,
-                            telephone: telephoneController.text.trim(),
-                            statut: 'succes',
-                            setDialogState: setDialogState,
-                          );
-                        },
-                  icon: _isInitiatingPayment
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.check_circle_outline),
-                  label: Text(
-                    _isInitiatingPayment ? 'Simulation...' : 'Simuler succès',
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-
-    telephoneController.dispose();
-  }
-
-  Future<void> _handlePaymentSimulation({
-    required BuildContext dialogContext,
-    required int commandeId,
-    required String fournisseur,
-    required String telephone,
-    required String statut,
-    required void Function(void Function()) setDialogState,
-  }) async {
-    if (telephone.isEmpty) {
-      ScaffoldMessenger.of(dialogContext).showSnackBar(
-        const SnackBar(
-          content: Text('Veuillez saisir votre numéro de téléphone.'),
-        ),
-      );
-
-      return;
-    }
-
-    setDialogState(() {
-      _isInitiatingPayment = true;
-    });
-
-    final success = await _simulatePayment(
-      commandeId: commandeId,
-      fournisseur: fournisseur,
-      telephone: telephone,
-      statut: statut,
-    );
-
-    if (!mounted) return;
-
-    if (!success) {
-      setDialogState(() {
-        _isInitiatingPayment = false;
-      });
-    }
-  }
-
-  Future<bool> _simulatePayment({
-    required int commandeId,
-    required String fournisseur,
-    required String telephone,
-    required String statut,
-  }) async {
-    final token = await AuthService.getToken();
-
-    if (token == null || token.isEmpty) {
-      if (!mounted) return false;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Votre session a expiré. Veuillez vous reconnecter.'),
-        ),
-      );
-
-      return false;
-    }
-
-    try {
-      final data = await ApiService.simulerPaiement(
-        token: token,
-        orderId: commandeId,
-        provider: fournisseur,
-        phone: telephone,
-        status: statut,
-      );
-
-      if (!mounted) return false;
-
-      final referenceId = data['reference_id']?.toString() ?? '';
-
-      final message = data['message']?.toString() ?? 'Simulation terminée.';
-
-      final statutPaiement = data['statut_paiement']?.toString() ?? '';
-
-      final statutCommande = data['statut_commande']?.toString() ?? '';
-
-      Navigator.of(context).pop();
-
-      await _loadCart();
-
-      if (!mounted) return false;
-
-      await _showPaymentResultDialog(
-        fournisseur: fournisseur,
-        commandeId: commandeId,
-        referenceId: referenceId,
-        message: message,
-        paymentUrl: null,
-        simulation: true,
-        statutPaiement: statutPaiement,
-        statutCommande: statutCommande,
-      );
-
-      return true;
-    } catch (e) {
-      if (!mounted) return false;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
-      );
-
-      return false;
-    }
-  }
-
-  Future<bool> _initiatePayment({
-    required int commandeId,
-    required String fournisseur,
-    required String telephone,
-  }) async {
-    final token = await AuthService.getToken();
-
-    if (token == null || token.isEmpty) {
-      if (!mounted) return false;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Votre session a expiré. Veuillez vous reconnecter.'),
-        ),
-      );
-
-      return false;
-    }
-
-    try {
-      final data = await ApiService.initierPaiement(
-        token: token,
-        orderId: commandeId,
-        provider: fournisseur,
-        phone: telephone,
-      );
-
-      if (!mounted) return false;
-
-      final referenceId = data['reference_id']?.toString() ?? '';
-
-      final message = data['message']?.toString() ?? 'Paiement initié.';
-
-      Navigator.of(context).pop();
-
-      await _showPaymentResultDialog(
-        fournisseur: fournisseur,
-        commandeId: commandeId,
-        referenceId: referenceId,
-        message: message,
-        paymentUrl: data['url_paiement']?.toString(),
-      );
-
-      return true;
-    } catch (e) {
-      if (!mounted) return false;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
-      );
-
-      return false;
-    }
-  }
-
-  Future<void> _showPaymentResultDialog({
-    required String fournisseur,
-    required int commandeId,
-    required String referenceId,
-    required String message,
-    String? paymentUrl,
-    bool simulation = false,
-    String statutPaiement = '',
-    String statutCommande = '',
-  }) async {
-    final providerName = fournisseur == 'mtn_momo'
-        ? 'MTN Mobile Money'
-        : 'Orange Money';
-
-    final paiementReussi = statutPaiement == 'succes';
-
-    await showDialog<void>(
-      context: context,
-      builder: (context) {
         return AlertDialog(
-          title: Text(
-            simulation ? 'Résultat de la simulation' : 'Paiement initié',
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  paiementReussi
-                      ? Icons.check_circle
-                      : simulation
-                      ? Icons.cancel
-                      : Icons.check_circle_outline,
-                  size: 56,
-                ),
-                const SizedBox(height: 16),
-
-                Text(
-                  message,
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
-
-                const SizedBox(height: 12),
-
-                Text(
-                  'Commande : #$commandeId',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-
-                const SizedBox(height: 6),
-
-                Text('Fournisseur : $providerName'),
-
-                if (simulation) ...[
-                  const SizedBox(height: 6),
-                  Text('Statut paiement : $statutPaiement'),
-                  const SizedBox(height: 6),
-                  Text('Statut commande : $statutCommande'),
-                ],
-
-                if (referenceId.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Text('Référence : $referenceId'),
-                ],
-
-                if (paymentUrl != null && paymentUrl.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    'Une page de paiement est disponible '
-                    'pour cette transaction.',
-                    style: TextStyle(color: Colors.grey.shade700),
-                  ),
-                ],
-
-                if (simulation) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    'Cette opération est une simulation de '
-                    'développement. Aucun argent réel n’a été débité.',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
-                  ),
-                ],
-              ],
-            ),
+          title: const Text('Commande créée'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Commande #$commandeId',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text('Montant : ${_formatPrice(montantTotal)}'),
+              const SizedBox(height: 16),
+              const Icon(
+                Icons.info_outline,
+                size: 40,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Le paiement en ligne est temporairement indisponible. '
+                'L’intégration officielle avec ARITED est en attente.\n\n'
+                'Votre commande n’est pas encore payée. '
+                'Ne considérez pas cette commande comme confirmée.',
+              ),
+            ],
           ),
           actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('OK'),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Fermer'),
             ),
           ],
         );

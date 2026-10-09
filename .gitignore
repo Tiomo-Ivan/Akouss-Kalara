@@ -116,3 +116,6 @@ firebase.json
 # Fichiers numériques déposés par les vendeurs
 /stockage/livres_numeriques/*
 !/stockage/livres_numeriques/.gitkeep
+
+# Configuration locale de la base de données
+/api/config/database.php
