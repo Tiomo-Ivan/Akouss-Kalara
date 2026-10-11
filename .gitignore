@@ -119,3 +119,6 @@ firebase.json
 
 # Configuration locale de la base de données
 /api/config/database.php
+
+# Configuration locale des paiements (ne pas versionner)
+/api/config/paiement_config.php
